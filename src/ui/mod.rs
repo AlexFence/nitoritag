@@ -1,3 +1,6 @@
+mod tageditor;
+
+use gtk;
 use gtk::{Builder, Window};
 use gtk::WidgetExt;
 
@@ -11,6 +14,12 @@ impl MainWindow {
         let builder = Builder::new_from_string(window_src);
 
         let root: Window = builder.get_object("main_window").unwrap();
+
+        root.connect_delete_event(|_, _| {
+                                      gtk::main_quit();
+                                      gtk::Inhibit(false)
+                                  });
+
         MainWindow { root }
     }
 
