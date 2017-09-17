@@ -2,7 +2,7 @@ mod tageditor;
 mod filelist;
 
 use gtk;
-use gtk::{Builder, Window, WindowExt, Paned, Widget};
+use gtk::{Builder, Window, WindowExt, Paned, PanedExt, Widget};
 use gtk::WidgetExt;
 
 pub use ui::tageditor::TagEditor;

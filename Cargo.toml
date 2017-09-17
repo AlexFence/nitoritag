@@ -4,7 +4,8 @@ version = "0.1.0"
 authors = ["Fence <fence@desu-mail.moe>"]
 
 [dependencies]
+gdk = "0.6.0"
 
 [dependencies.gtk]
-version = "0.1.3"
+version = "0.2.0"
 features = ["v3_10"]
