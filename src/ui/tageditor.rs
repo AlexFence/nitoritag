@@ -1,5 +1,6 @@
 use gtk::{Builder, Box};
-use gtk::WidgetExt;
+
+use ui::Component;
 
 pub struct TagEditor {
     root: Box,
@@ -13,8 +14,10 @@ impl TagEditor {
         let root: Box = builder.get_object("tag_editor").unwrap();
         Self { root }
     }
+}
 
-    pub fn show(&mut self) {
-        self.root.show_all();
+impl Component<Box> for TagEditor {
+    fn get_root_widget(&mut self) -> &mut Box {
+        &mut self.root
     }
 }

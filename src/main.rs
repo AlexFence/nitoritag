@@ -10,7 +10,10 @@ fn main() {
         return;
     }
 
-    let mut main_window = ui::MainWindow::new();
+    let mut tageditor = ui::TagEditor::new();
+    let mut filelist = ui::FileList::new();
+    let mut main_window = ui::MainWindow::new(&mut tageditor, &mut filelist);
+
     main_window.show();
     gtk::main();
 }
