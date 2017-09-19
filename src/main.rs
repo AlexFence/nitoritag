@@ -1,7 +1,10 @@
 extern crate gtk;
 extern crate gdk;
+extern crate id3;
+extern crate url;
 
 mod ui;
+mod tags;
 
 use gtk::prelude::*;
 
