@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use gtk;
 use gdk;
 use gtk::prelude::*;
-use gtk::{TreeView, TreeViewColumn, CellRendererText, TreeStore};
+use gtk::{TreeView, TreeViewColumn, CellRendererText, ListStoreExt, ListStore};
 use ui::Component;
 use tags;
 use tags::TagManager;
@@ -23,16 +23,14 @@ fn append_text_column(tree: &TreeView, title: &str) {
     tree.append_column(&column);
 }
 
-pub fn get_model() -> TreeStore {
-    TreeStore::new(
-        &[
-            String::static_type(),
-            String::static_type(),
-            String::static_type(),
-            String::static_type(),
-            String::static_type(),
-        ],
-    )
+pub fn get_model() -> ListStore {
+    let mut store = ListStore::new(&[String::static_type(),
+                                     String::static_type(),
+                                     String::static_type(),
+                                     String::static_type(),
+                                     String::static_type()]);
+
+    store
 }
 
 pub struct FileList {
@@ -76,9 +74,31 @@ impl FileList {
 
         });
 
-
-
         FileList { root, tags }
+    }
+
+    fn update(mut self) {
+        let model: ListStore = get_model();
+
+        let cloned_tags = self.tags.clone();
+        let cloned_tags2 = self.tags.clone();
+        let owo = cloned_tags2.borrow();
+        let paths_test = cloned_tags.borrow();
+        let paths = paths_test.get_index();
+        for path in paths {
+            let tag = owo.clone().get(path.to_path_buf()).unwrap();
+            let title = tag.title().unwrap().to_string();
+            let artist = tag.artist().unwrap().to_string();
+            let album_artist = tag.album_artist().unwrap().to_string();
+            let album = tag.album().unwrap().to_string();
+            let path = String::from_str("nyan").unwrap();
+            model.insert_with_values(None,
+                                     &[0, 1, 2, 3, 4],
+                                     &[&title, &artist, &album_artist, &album, &path]);
+        }
+
+
+        self.root.set_model(Some(&model));
     }
 }
 
