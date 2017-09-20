@@ -12,26 +12,6 @@ use std::cell::RefCell;
 use id3::Tag;
 use std::str::FromStr;
 
-fn append_text_column(tree: &TreeView, title: &str) {
-    let column = TreeViewColumn::new();
-    let cell = CellRendererText::new();
-
-
-    column.set_title(title);
-    column.pack_start(&cell, true);
-    column.add_attribute(&cell, "text", 0);
-    tree.append_column(&column);
-}
-
-pub fn get_model() -> ListStore {
-    let mut store = ListStore::new(&[String::static_type(),
-                                     String::static_type(),
-                                     String::static_type(),
-                                     String::static_type(),
-                                     String::static_type()]);
-
-    store
-}
 
 pub struct FileList {
     root: TreeView,
@@ -40,22 +20,22 @@ pub struct FileList {
 
 impl FileList {
     pub fn new() -> Self {
-        let mut tags: Rc<RefCell<TagManager>> = Rc::new(RefCell::new(TagManager::new()));
+        let tags: Rc<RefCell<TagManager>> = Rc::new(RefCell::new(TagManager::new()));
         let root: TreeView = TreeView::new();
-        append_text_column(&root, "Title");
-        append_text_column(&root, "Artist");
-        append_text_column(&root, "Album Artist");
-        append_text_column(&root, "Album");
-        append_text_column(&root, "Path");
+        Self::append_text_column(&root, "Title", 0);
+        Self::append_text_column(&root, "Artist", 1);
+        Self::append_text_column(&root, "Album Artist", 2);
+        Self::append_text_column(&root, "Album", 3);
+        Self::append_text_column(&root, "Path", 4);
         root.set_headers_visible(true);
-        root.set_model(Some(&get_model()));
+        root.set_model(Some(&Self::get_model()));
 
 
         let cloned_tags = tags.clone();
 
         root.drag_dest_set(gtk::DEST_DEFAULT_ALL, &[], gdk::ACTION_COPY);
         root.drag_dest_add_uri_targets();
-        root.connect_drag_data_received(move |_, _, _, _, data, _, _| {
+        root.connect_drag_data_received(move |w, _, _, _, data, _, _| {
             let uris = data.get_uris();
             let uri = &uris[0];
 
@@ -65,6 +45,7 @@ impl FileList {
                     match v.to_file_path() {
                         Ok(path) => {
                             cloned_tags.borrow_mut().add_from_path(path);
+                            Self::update_table(w, cloned_tags.clone());
                         }
                         Err(e) => println!("this is not a local file desu {:?}", e),
                     }
@@ -77,28 +58,66 @@ impl FileList {
         FileList { root, tags }
     }
 
-    fn update(mut self) {
-        let model: ListStore = get_model();
+    fn append_text_column(tree: &TreeView, title: &str, position: i32) {
+        let column = TreeViewColumn::new();
+        let cell = CellRendererText::new();
 
-        let cloned_tags = self.tags.clone();
-        let cloned_tags2 = self.tags.clone();
-        let owo = cloned_tags2.borrow();
-        let paths_test = cloned_tags.borrow();
-        let paths = paths_test.get_index();
+        column.set_title(title);
+        column.pack_start(&cell, true);
+
+        //position is needed so the cell is linked to the column
+        column.add_attribute(&cell, "text", position);
+        tree.append_column(&column);
+    }
+
+    //TODO get rid of this
+    fn get_model() -> ListStore {
+        ListStore::new(
+            &[
+                String::static_type(),
+                String::static_type(),
+                String::static_type(),
+                String::static_type(),
+                String::static_type(),
+            ],
+        )
+    }
+
+    //TODO Try to improve this mess ;w;
+    fn update_table(table: &TreeView, tags: Rc<RefCell<TagManager>>) {
+        let model: ListStore = Self::get_model();
+        //what even is this?
+        let cloned_tags1 = tags.clone();
+        let cloned_and_borrowed_tags1 = cloned_tags1.borrow();
+        let borrowed_tags = tags.borrow();
+
+        let paths = cloned_and_borrowed_tags1.get_index();
         for path in paths {
-            let tag = owo.clone().get(path.to_path_buf()).unwrap();
+            let tag = borrowed_tags.clone().get(path.to_path_buf()).unwrap();
             let title = tag.title().unwrap().to_string();
             let artist = tag.artist().unwrap().to_string();
             let album_artist = tag.album_artist().unwrap().to_string();
             let album = tag.album().unwrap().to_string();
-            let path = String::from_str("nyan").unwrap();
-            model.insert_with_values(None,
-                                     &[0, 1, 2, 3, 4],
-                                     &[&title, &artist, &album_artist, &album, &path]);
+            let path = match path.clone().into_os_string().into_string() {
+                Ok(v) => v,
+                Err(e) => String::from_str("TwT").unwrap(),
+            };
+
+            println!(
+                "tags: {:?}",
+                [&title, &artist, &album_artist, &album, &path]
+            );
+
+            let iter = model.append();
+            model.set(
+                &iter,
+                &[0, 1, 2, 3, 4],
+                &[&title, &artist, &album_artist, &album, &path],
+            );
         }
 
 
-        self.root.set_model(Some(&model));
+        table.set_model(Some(&model));
     }
 }
 
