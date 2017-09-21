@@ -6,6 +6,7 @@ authors = ["Fence <fence@desu-mail.moe>"]
 [dependencies]
 gdk = "0.6.0"
 id3 = "0.2"
+taglib = "0.2.0"
 url = "1.5.1"
 
 [dependencies.gtk]
