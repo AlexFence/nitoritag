@@ -5,7 +5,7 @@ use gtk::prelude::*;
 use gtk::{TreeView, TreeViewColumn, CellRendererText, ListStoreExt, ListStore};
 use ui::Component;
 use tags;
-use tags::TagManager;
+use tags::TagIndex;
 use url::Url;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -15,12 +15,12 @@ use std::str::FromStr;
 
 pub struct FileList {
     root: TreeView,
-    tags: Rc<RefCell<TagManager>>,
+    tags: Rc<RefCell<TagIndex>>,
 }
 
 impl FileList {
     pub fn new() -> Self {
-        let tags: Rc<RefCell<TagManager>> = Rc::new(RefCell::new(TagManager::new()));
+        let tags: Rc<RefCell<TagIndex>> = Rc::new(RefCell::new(TagIndex::new()));
         let root: TreeView = TreeView::new();
         Self::append_text_column(&root, "Title", 0);
         Self::append_text_column(&root, "Artist", 1);
@@ -84,7 +84,7 @@ impl FileList {
     }
 
     //TODO Try to improve this mess ;w;
-    fn update_table(table: &TreeView, tags: Rc<RefCell<TagManager>>) {
+    fn update_table(table: &TreeView, tags: Rc<RefCell<TagIndex>>) {
         let model: ListStore = Self::get_model();
         //what even is this?
         let cloned_tags1 = tags.clone();
@@ -94,10 +94,10 @@ impl FileList {
         let paths = cloned_and_borrowed_tags1.get_index();
         for path in paths {
             let tag = borrowed_tags.clone().get(path.to_path_buf()).unwrap();
-            let title = tag.title().unwrap().to_string();
-            let artist = tag.artist().unwrap().to_string();
-            let album_artist = tag.album_artist().unwrap().to_string();
-            let album = tag.album().unwrap().to_string();
+            let title = tag.clone().title().unwrap().to_string();
+            let artist = tag.clone().artist().unwrap().to_string();
+            let album_artist = tag.clone().album_artist().unwrap().to_string();
+            let album = tag.clone().album().unwrap().to_string();
             let path = match path.clone().into_os_string().into_string() {
                 Ok(v) => v,
                 Err(e) => String::from_str("TwT").unwrap(),
