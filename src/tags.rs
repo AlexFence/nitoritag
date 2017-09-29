@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use id3;
 use taglib;
+use metaflac;
 
 #[derive(Clone)]
 pub enum Format {
@@ -44,7 +45,7 @@ impl Tag {
         match format {
             Format::MP3 => Self::create_from_mp3(p, Format::MP3),
             Format::OGG => Self::create_from_ogg(p, Format::OGG),
-            Format::FLAC => Self::create_from_flac(),
+            Format::FLAC => Self::create_from_flac(p, Format::FLAC),
         }
     }
 
@@ -83,8 +84,46 @@ impl Tag {
        Self::create_from_taglib(p, f)
     }
 
-    fn create_from_flac() -> Option<Tag> {
-        unimplemented!()
+    fn create_from_flac(p: &PathBuf, format: Format) -> Option<Tag> {
+        // TODO improve this
+        // TODO check why the vorbis comments return vecs
+        fn convert_vec(vec: Option<&Vec<String>>) -> Option<String> {
+            match vec {
+                Some(v) => {
+                    match &v.clone().pop() {
+                        &Some(ref v) => Some(v.clone()),
+                        &None => None
+                    }
+                },
+                None => None
+            }
+        }
+
+        let flac_tag = metaflac::Tag::read_from_path(p);
+
+        if let Ok(flac_tag) = flac_tag {
+            let vorbiscomments = match flac_tag.vorbis_comments() {
+                Some(s) => s.clone(),
+                None => metaflac::block::VorbisComment::new(),
+            };
+
+            let title = convert_vec(vorbiscomments.title());
+            let album = convert_vec(vorbiscomments.album());
+            let artist = convert_vec(vorbiscomments.artist());
+            let album_artist = convert_vec(vorbiscomments.album_artist());
+            // TODO get the year somehow
+            let year = None;
+
+            return Some(Tag{
+                format,
+                title,
+                album,
+                artist,
+                album_artist,
+                year,
+            });
+        }
+        None
     }
 
     fn create_from_taglib(p: &PathBuf, format: Format) -> Option<Tag> {

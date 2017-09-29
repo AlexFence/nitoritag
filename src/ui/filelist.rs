@@ -12,6 +12,11 @@ use std::cell::RefCell;
 use id3::Tag;
 use std::str::FromStr;
 
+struct FileListRow {
+    tag: Tag,
+    path: PathBuf,
+}
+
 
 pub struct FileList {
     root: TreeView,
