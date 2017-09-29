@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::str::FromStr;
 use id3;
 use taglib;
 
+#[derive(Clone)]
 pub enum Format {
     MP3,
     OGG,
@@ -28,11 +28,12 @@ impl Format {
 
 #[derive(Clone)]
 pub struct Tag {
+    format: Format,
     title: Option<String>,
     album: Option<String>,
     artist: Option<String>,
     album_artist: Option<String>,
-    year: Option<String>,
+    year: Option<i32>,
 }
 
 // TODO implement new
@@ -41,14 +42,41 @@ impl Tag {
         let format = Format::get_format(p).unwrap();
 
         match format {
-            Format::MP3 => Self::create_from_mp3(),
+            Format::MP3 => Self::create_from_mp3(p, Format::MP3),
             Format::OGG => Self::create_from_ogg(),
             Format::FLAC => Self::create_from_flac(),
         }
     }
 
-    fn create_from_mp3() -> Option<Tag> {
-        unimplemented!()
+    fn create_from_mp3(p: &PathBuf, format: Format) -> Option<Tag> {
+        let id3tag = id3::Tag::read_from_path(p);
+
+        fn convert_option_to_string(o: Option<&str>) -> Option<String> {
+            match o {
+                Some(s) => Some(s.to_string()),
+                None => None,
+            }
+        }
+
+        if let Ok(id3tag) = id3tag {
+            let title = convert_option_to_string(id3tag.title());
+            let album =  convert_option_to_string(id3tag.album());
+            let artist = convert_option_to_string(id3tag.artist());
+            let album_artist = convert_option_to_string(id3tag.album_artist());
+            let year = id3tag.year();
+
+
+            return Some(Tag{
+                format,
+                title,
+                album,
+                artist,
+                album_artist,
+                year,
+            });
+        }
+
+        None
     }
 
     fn create_from_ogg() -> Option<Tag> {
