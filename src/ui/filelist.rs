@@ -93,6 +93,7 @@ impl FileList {
 
         let paths = cloned_and_borrowed_tags1.get_index();
         for path in paths {
+            // TODO fix that unwrap shit (empty table cells)
             let tag = borrowed_tags.clone().get(path.to_path_buf()).unwrap();
             let title = tag.clone().title().unwrap().to_string();
             let artist = tag.clone().artist().unwrap().to_string();

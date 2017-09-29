@@ -43,7 +43,7 @@ impl Tag {
 
         match format {
             Format::MP3 => Self::create_from_mp3(p, Format::MP3),
-            Format::OGG => Self::create_from_ogg(),
+            Format::OGG => Self::create_from_ogg(p, Format::OGG),
             Format::FLAC => Self::create_from_flac(),
         }
     }
@@ -79,12 +79,51 @@ impl Tag {
         None
     }
 
-    fn create_from_ogg() -> Option<Tag> {
-        unimplemented!()
+    fn create_from_ogg(p: &PathBuf, f: Format) -> Option<Tag> {
+       Self::create_from_taglib(p, f)
     }
 
     fn create_from_flac() -> Option<Tag> {
         unimplemented!()
+    }
+
+    fn create_from_taglib(p: &PathBuf, format: Format) -> Option<Tag> {
+    	let file = taglib::File::new(p.to_str().unwrap());
+
+        fn convert_to_option(s: String) -> Option<String> {
+            if s != "" {
+                return Some(s);
+            }
+
+            None
+        }
+
+        if let Ok(file) = file {
+            let taglib_tag = file.tag().unwrap();
+            let title = convert_to_option(taglib_tag.title());
+            let album = convert_to_option(taglib_tag.album());
+            let artist = convert_to_option(taglib_tag.artist());
+            // TODO refactor this (mut)
+            let year_temp = taglib_tag.year();
+            let mut year;
+
+            if year_temp > 0 {
+                year = Some(year_temp as i32);
+            } else {
+                year = None;
+            }
+
+            return Some(Tag{
+                format,
+                title,
+                album,
+                album_artist: artist.clone(),
+                artist,
+                year,
+            });
+        }
+
+        None
     }
 
     pub fn title(self) -> Option<String> {
@@ -131,6 +170,7 @@ impl TagIndex {
     }
 
     pub fn add_from_path(&mut self, path: PathBuf) {
+        // TODO fix this
         let tag = Tag::new(&path).unwrap();
         let e = path.clone();
         &self.index.push(e);
