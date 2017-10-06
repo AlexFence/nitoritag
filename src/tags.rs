@@ -80,6 +80,8 @@ impl Tag {
         None
     }
 
+    // TODO fix this, it explodes ;w;
+    //      stacktrace says it explodes on the unwrap in tagindex.add_from_path
     fn create_from_ogg(p: &PathBuf, f: Format) -> Option<Tag> {
        Self::create_from_taglib(p, f)
     }
@@ -210,6 +212,9 @@ impl TagIndex {
 
     pub fn add_from_path(&mut self, path: PathBuf) {
         // TODO fix this
+        //      maybe return the success as a boolean?
+        //      result would be cleaner
+        //      custom errors?
         let tag = Tag::new(&path).unwrap();
         let e = path.clone();
         &self.index.push(e);

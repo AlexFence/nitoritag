@@ -2,7 +2,7 @@ mod tageditor;
 mod filelist;
 
 use gtk;
-use gtk::{Builder, Window, WindowExt, Paned, PanedExt, Widget};
+use gtk::{Builder, Window, WindowExt, Paned, PanedExt, Widget, ScrolledWindow, ContainerExt};
 use gtk::WidgetExt;
 
 pub use ui::tageditor::TagEditor;
@@ -24,12 +24,16 @@ impl MainWindow {
         let window_src = include_str!("main_window.glade");
         let builder = Builder::new_from_string(window_src);
 
+        //scrollcontainer for the filelist
+        let scroll_container: ScrolledWindow = ScrolledWindow::new(None, None);
+        scroll_container.add(list.get_root_widget());
+
         let root: Window = builder.get_object("main_window").unwrap();
         root.set_title("NitoriTag");
 
         let paned: Paned = builder.get_object("paned").unwrap();
         paned.add1(editor.get_root_widget());
-        paned.add2(list.get_root_widget());
+        paned.add2(&scroll_container);
 
         root.connect_delete_event(|_, _| {
             gtk::main_quit();

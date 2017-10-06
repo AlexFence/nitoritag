@@ -10,6 +10,7 @@ mod tags;
 
 use gtk::prelude::*;
 
+// TODO add some decent logging
 fn main() {
     if gtk::init().is_err() {
         println!("Failed to initialize GTK.");
