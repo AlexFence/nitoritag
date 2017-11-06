@@ -50,6 +50,7 @@ impl FileList {
                     Ok(v) => {
                         match v.to_file_path() {
                             Ok(path) => {
+                                // TODO check if it is a folder here
                                 cloned_tags.borrow_mut().add_from_path(path);
                                 Self::update_table(w, cloned_tags.clone());
                             }
@@ -63,6 +64,7 @@ impl FileList {
 
         // TODO don't just print out the title, pass the tag to the editor some how
         //      not sure how to do it, all options seem wrong
+        let cloned_tags2 = tags.clone();
         let selection = root.get_selection();
         selection.connect_changed(move |tree_selection| {
                 // get tree paths and model and shit to tired
@@ -75,8 +77,12 @@ impl FileList {
                 }
                 // get the values of the iters hooray
                 for iter in iters {
-                    let title = model.get_value(&iter, 0).get::<String>().unwrap();
-                    println!("{}", title);
+                    // TODO clean up
+                    let path_string = model.get_value(&iter, 4).get::<String>().unwrap();
+                    let path = PathBuf::from(path_string);
+                    let tag = cloned_tags2.borrow_mut().clone().get(path).unwrap();
+                    // send the Tag to the editor
+                    println!("{}", tag.title().unwrap());
                 }
         });
 
