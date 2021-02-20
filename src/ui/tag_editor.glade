@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.20.0 -->
+<!-- Generated with glade 3.22.2 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkBox" id="tag_editor">
@@ -27,10 +27,9 @@
           </packing>
         </child>
         <child>
-          <object class="GtkComboBox" id="title_entry">
+          <object class="GtkComboBoxText" id="title_entry">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="has_frame">False</property>
             <property name="has_entry">True</property>
             <child internal-child="entry">
               <object class="GtkEntry">
@@ -72,10 +71,9 @@
           </packing>
         </child>
         <child>
-          <object class="GtkComboBox" id="artist_entry">
+          <object class="GtkComboBoxText" id="artist_entry">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="has_frame">False</property>
             <property name="has_entry">True</property>
             <child internal-child="entry">
               <object class="GtkEntry">
@@ -117,10 +115,9 @@
           </packing>
         </child>
         <child>
-          <object class="GtkComboBox">
+          <object class="GtkComboBoxText" id="album_artist_entry">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="has_frame">False</property>
             <property name="has_entry">True</property>
             <child internal-child="entry">
               <object class="GtkEntry">
@@ -162,10 +159,9 @@
           </packing>
         </child>
         <child>
-          <object class="GtkComboBox">
+          <object class="GtkComboBoxText" id="album_entry">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="has_frame">False</property>
             <property name="has_entry">True</property>
             <child internal-child="entry">
               <object class="GtkEntry">

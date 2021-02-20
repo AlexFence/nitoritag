@@ -6,7 +6,7 @@ use id3;
 use taglib;
 use metaflac;
 
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub enum Format {
     MP3,
     OGG,
@@ -178,7 +178,6 @@ impl Tag {
         self.artist
     }
 }
-
 
 #[derive(Clone)]
 pub struct TagIndex {

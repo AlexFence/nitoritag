@@ -3,6 +3,10 @@ mod tag_editor;
 mod file_list;
 mod main_window;
 
+use std::rc::Rc;
+use std::cell::RefCell;
+use std::borrow::{Borrow, BorrowMut};
+
 use gtk;
 use gtk::{Builder, Window, Paned, PanedExt, Widget, ScrolledWindow, ContainerExt, WidgetExt, GtkWindowExt};
 use gtk::prelude::BuilderExtManual;
@@ -13,9 +17,6 @@ pub use ui::tag_editor::TagEditor;
 pub use ui::file_list::FileList;
 use ui::main_window::MainWindow;
 use ui::action_bus::ActionBus;
-use std::rc::Rc;
-use std::cell::RefCell;
-use std::borrow::{Borrow, BorrowMut};
 
 pub trait Component<T>
 where

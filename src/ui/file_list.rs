@@ -1,16 +1,18 @@
 use std::path::PathBuf;
+use std::rc::Rc;
+use std::cell::RefCell;
+use std::str::FromStr;
+
 use gtk;
 use gdk;
 use gtk::prelude::*;
 use gtk::{TreeView, TreeViewColumn, CellRendererText, ListStore, SelectionMode};
-use ui::{Component};
+use gtk::TreeIter;
+use url::Url;
+
 use tags::Tag;
 use tags::TagIndex;
-use url::Url;
-use std::rc::Rc;
-use std::cell::RefCell;
-use std::str::FromStr;
-use gtk::TreeIter;
+use ui::{Component};
 use ui::action_bus::{ActionBus, Action};
 
 struct FileListRow {

@@ -1,14 +1,20 @@
-use gtk::{Builder, Box};
-use gtk::prelude::BuilderExtManual;
-
-use ui::{Component, EditorComponent};
-use tags::Tag;
-use ui::action_bus::ActionBus;
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::collections::{HashMap, HashSet};
+
+use gtk::{Builder, EntryExt, ComboBoxTextExt, CellLayoutExt};
+use gtk::prelude::{BuilderExtManual, ComboBoxExtManual};
+
+use tags::Tag;
+use ui::{Component, EditorComponent};
+use ui::action_bus::ActionBus;
 
 pub struct TagEditor {
-    root: Box,
+    root: gtk::Box,
+    title: gtk::ComboBoxText,
+    artist: gtk::ComboBoxText,
+    album_artist: gtk::ComboBoxText,
+    album: gtk::ComboBoxText,
     tags: Vec<Tag>,
     action_bus: Rc<RefCell<ActionBus>>
 }
@@ -18,14 +24,80 @@ impl TagEditor {
         let window_src = include_str!("tag_editor.glade");
         let builder = Builder::new_from_string(window_src);
 
-        let root: Box = builder.get_object("tag_editor").unwrap();
+        let root: gtk::Box = builder.get_object("tag_editor").unwrap();
+        let title: gtk::ComboBoxText = builder.get_object("title_entry").unwrap();
+        let artist: gtk::ComboBoxText = builder.get_object("artist_entry").unwrap();
+        let album_artist: gtk::ComboBoxText = builder.get_object("album_artist_entry").unwrap();
+        let album: gtk::ComboBoxText = builder.get_object("album_entry").unwrap();
+
         let tags: Vec<Tag> = Vec::new();
-        Self { root, tags, action_bus}
+        Self { root, title, artist, album_artist, album, tags, action_bus}
+    }
+
+    fn clear_fields(&mut self) {
+        self.title.remove_all();
+        self.artist.remove_all();
+        self.album.remove_all();
+        self.album_artist.remove_all();
+    }
+
+    fn populate_entry(entry: &gtk::ComboBoxText, values: &HashSet<String>) {
+        values.iter().for_each(|x|  entry.append_text(x.as_str()));
+
+        if values.len() > 1 {
+            entry.prepend_text("<keep>");
+        }
+
+        entry.set_active(Some(0));
+    }
+
+    fn update_fields(&mut self) {
+        self.clear_fields();
+
+        let mut unique_titles: HashSet<String> = HashSet::new();
+        let mut unique_artists: HashSet<String> = HashSet::new();
+        let mut unique_album_artists: HashSet<String> = HashSet::new();
+        let mut unique_albums: HashSet<String> = HashSet::new();
+
+        for tag in self.tags.clone() {
+            let title_option= tag.clone().title();
+            let artist_option = tag.clone().artist();
+            let album_option = tag.clone().album();
+            let album_artist_option = tag.clone().album_artist();
+
+            // we have to handle None values as empty strings for the ui to make sense
+            // no value is also a value for the combo boxes
+            match title_option {
+                Some(title) => unique_titles.insert(title),
+                None => unique_titles.insert(String::new())
+            };
+
+            match artist_option {
+                Some(artists) => unique_artists.insert(artists),
+                None => unique_artists.insert(String::new())
+            };
+
+            match album_option {
+                Some(album) => unique_albums.insert(album),
+                None => unique_albums.insert(String::new())
+            };
+
+            match album_artist_option {
+                Some(album_artist) => unique_album_artists.insert(album_artist),
+                None => unique_album_artists.insert(String::new())
+            };
+
+        }
+
+        Self::populate_entry(&self.title, &unique_titles);
+        Self::populate_entry(&self.artist, &unique_artists);
+        Self::populate_entry(&self.album, &unique_albums);
+        Self::populate_entry(&self.album_artist, &unique_album_artists);
     }
 }
 
-impl Component<Box> for TagEditor {
-    fn get_root_widget(&mut self) -> &mut Box {
+impl Component<gtk::Box> for TagEditor {
+    fn get_root_widget(&mut self) -> &mut gtk::Box {
         &mut self.root
     }
 }
@@ -37,5 +109,6 @@ impl EditorComponent for TagEditor {
             println!("{:?}", t);
         }
         self.tags = tags;
+        self.update_fields();
     }
 }
