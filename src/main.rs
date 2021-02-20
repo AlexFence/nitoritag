@@ -17,9 +17,9 @@ fn main() {
         return;
     }
 
-    let mut tageditor = ui::TagEditor::new();
-    let mut filelist = ui::FileList::new();
-    let mut main_window = ui::MainWindow::new(&mut tageditor, &mut filelist);
+    let mut tag_editor = ui::TagEditor::new();
+    let mut file_list = ui::FileList::new();
+    let mut main_window = ui::MainWindow::new(&mut tag_editor, &mut file_list);
 
     main_window.show();
     gtk::main();

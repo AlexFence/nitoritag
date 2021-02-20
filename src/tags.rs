@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::fs;
+use std::io;
 use id3;
 use taglib;
 use metaflac;
@@ -25,6 +27,10 @@ impl Format {
             None => None,
         }
     }
+
+    pub fn file_is_supported(path: &PathBuf) -> bool {
+        return Self::get_format(path).is_some()
+    }
 }
 
 #[derive(Clone)]
@@ -37,7 +43,6 @@ pub struct Tag {
     year: Option<i32>,
 }
 
-// TODO implement new
 impl Tag {
     pub fn new(p: &PathBuf) -> Option<Tag> {
         let format = Format::get_format(p).unwrap();
@@ -200,19 +205,31 @@ impl TagIndex {
         }
     }
 
-    pub fn add_from_path(&mut self, path: PathBuf) {
-        // TODO fix this
-        //      maybe return the success as a boolean?
-        //      result would be cleaner
-        //      custom errors?
-        let tag = Tag::new(&path).unwrap();
-        let e = path.clone();
-        &self.index.push(e);
-        // println!("added {:?} desu", tag.title());
-        &self.tags.insert(path, tag);
+    pub fn add_from_path(&mut self, path: PathBuf) -> io::Result<()> {
+        if path.is_dir() {
+            for entry  in fs::read_dir(&path)? {
+                let entry = entry?;
+                let path = entry.path();
+                self.add_from_path(path)?;
+            }
+        } else {
+            self.add_file_path(path)
+        }
+        Ok(())
     }
 
     pub fn get_index(&self) -> &Vec<PathBuf> {
         &self.index
+    }
+
+    fn add_file_path(&mut self, path: PathBuf) {
+        if Format::file_is_supported(&path) {
+            let tag = Tag::new(&path).unwrap();
+            let e = path.clone();
+            &self.index.push(e);
+            &self.tags.insert(path, tag);
+        } else {
+            eprintln!("{} is not a supported audio file!", path.into_os_string().into_string().unwrap());
+        }
     }
 }
