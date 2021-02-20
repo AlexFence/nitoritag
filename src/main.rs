@@ -6,21 +6,14 @@ extern crate metaflac;
 extern crate taglib;
 extern crate url;
 
+use std::rc::Rc;
+use std::cell::RefCell;
+
 mod ui;
 mod tags;
 
 
 // TODO add some decent logging
 fn main() {
-    if gtk::init().is_err() {
-        println!("Failed to initialize GTK.");
-        return;
-    }
-
-    let mut tag_editor = ui::TagEditor::new();
-    let mut file_list = ui::FileList::new();
-    let mut main_window = ui::MainWindow::new(&mut tag_editor, &mut file_list);
-
-    main_window.show();
-    gtk::main();
+   ui::main()
 }

@@ -2,8 +2,8 @@ use std::path::PathBuf;
 use gtk;
 use gdk;
 use gtk::prelude::*;
-use gtk::{TreeView, TreeViewColumn, CellRendererText, ListStore};
-use ui::Component;
+use gtk::{TreeView, TreeViewColumn, CellRendererText, ListStore, SelectionMode};
+use ui::{Component};
 use tags::Tag;
 use tags::TagIndex;
 use url::Url;
@@ -11,6 +11,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::str::FromStr;
 use gtk::TreeIter;
+use ui::action_bus::{ActionBus, Action};
 
 struct FileListRow {
     pub tag: Tag,
@@ -21,10 +22,11 @@ struct FileListRow {
 pub struct FileList {
     root: TreeView,
     tags: Rc<RefCell<TagIndex>>,
+    action_bus: Rc<RefCell<ActionBus>>
 }
 
 impl FileList {
-    pub fn new() -> Self {
+    pub fn new(action_bus: Rc<RefCell<ActionBus>>) -> Self {
         let tags: Rc<RefCell<TagIndex>> = Rc::new(RefCell::new(TagIndex::new()));
         let root: TreeView = TreeView::new();
         Self::append_text_column(&root, "Title", 0);
@@ -39,7 +41,6 @@ impl FileList {
         let cloned_tags = tags.clone();
 
         // TODO ogg crashes
-        // TODO folders crash too
         root.drag_dest_set(gtk::DestDefaults::all(), &[], gdk::DragAction::COPY);
         root.drag_dest_add_uri_targets();
         root.connect_drag_data_received(move |w, _, _, _, data, _, _| {
@@ -65,28 +66,32 @@ impl FileList {
         // TODO don't just print out the title, pass the tag to the editor some how
         //      not sure how to do it, all options seem wrong
         let cloned_tags2 = tags.clone();
+        let action_bus_clone = action_bus.clone();
         let selection = root.get_selection();
+        selection.set_mode(SelectionMode::Multiple);
         selection.connect_changed(move |tree_selection| {
                 // get tree paths and model and shit to tired
                 let (paths, model) = tree_selection.get_selected_rows();
-
                 // convert the paths to iters
                 let mut iters: Vec<TreeIter> = Vec::new();
                 for path in paths {
                     iters.push(model.get_iter(&path).unwrap());
                 }
-                // get the values of the iters hooray
+
+                let mut selected_tags: Vec<Tag> = Vec::new();
+
                 for iter in iters {
                     // TODO clean up
                     let path_string = model.get_value(&iter, 4).get::<String>().unwrap();
                     let path = PathBuf::from(path_string.unwrap());
                     let tag = cloned_tags2.borrow_mut().clone().get(path).unwrap();
-                    // send the Tag to the editor
-                    println!("{}", tag.title().unwrap());
+                    //println!("{}", tag.title().unwrap());
+                    selected_tags.push(tag);
                 }
+                action_bus_clone.borrow_mut().dispatch(Action::SetTagsToEdit(selected_tags));
         });
 
-        FileList { root, tags }
+        FileList { root, tags, action_bus }
     }
 
     fn append_text_column(tree: &TreeView, title: &str, position: i32) {

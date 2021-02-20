@@ -1,13 +1,21 @@
-mod tageditor;
-mod filelist;
+mod action_bus;
+mod tag_editor;
+mod file_list;
+mod main_window;
 
 use gtk;
 use gtk::{Builder, Window, Paned, PanedExt, Widget, ScrolledWindow, ContainerExt, WidgetExt, GtkWindowExt};
 use gtk::prelude::BuilderExtManual;
 use glib::object::IsA;
 
-pub use ui::tageditor::TagEditor;
-pub use ui::filelist::FileList;
+use tags::Tag;
+pub use ui::tag_editor::TagEditor;
+pub use ui::file_list::FileList;
+use ui::main_window::MainWindow;
+use ui::action_bus::ActionBus;
+use std::rc::Rc;
+use std::cell::RefCell;
+use std::borrow::{Borrow, BorrowMut};
 
 pub trait Component<T>
 where
@@ -16,35 +24,25 @@ where
     fn get_root_widget(&mut self) -> &mut T;
 }
 
-pub struct MainWindow {
-    root: Window,
+trait EditorComponent {
+    fn set_tags_to_edit(&mut self, tags: Vec<Tag>);
 }
 
-impl MainWindow {
-    pub fn new(editor: &mut TagEditor, list: &mut FileList) -> Self {
-        let window_src = include_str!("main_window.glade");
-        let builder = Builder::new_from_string(window_src);
-
-        //scroll_container for the filelist
-        let scroll_container: ScrolledWindow = ScrolledWindow::new(gtk::NONE_ADJUSTMENT, gtk::NONE_ADJUSTMENT);
-        scroll_container.add(list.get_root_widget());
-
-        let root: Window = builder.get_object("main_window").unwrap();
-        root.set_title("NitoriTag");
-
-        let paned: Paned = builder.get_object("paned").unwrap();
-        paned.add1(editor.get_root_widget());
-        paned.add2(&scroll_container);
-
-        root.connect_delete_event(|_, _| {
-            gtk::main_quit();
-            gtk::Inhibit(false)
-        });
-
-        MainWindow { root }
+pub fn main () {
+    if gtk::init().is_err() {
+        println!("Failed to initialize GTK.");
+        return;
     }
 
-    pub fn show(&mut self) {
-        self.root.show_all();
-    }
+    let mut action_bus = ActionBus::new();
+    let mut action_bus_rc = Rc::new(RefCell::new(action_bus));
+
+    let mut tag_editor = TagEditor::new(action_bus_rc.clone());
+    let mut file_list = FileList::new(action_bus_rc.clone());
+    let mut main_window = MainWindow::new(&mut tag_editor, &mut file_list);
+
+    &action_bus_rc.as_ref().borrow_mut().set_editor(Box::new(tag_editor));
+
+    main_window.show();
+    gtk::main();
 }

@@ -6,7 +6,7 @@ use id3;
 use taglib;
 use metaflac;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Format {
     MP3,
     OGG,
@@ -33,7 +33,7 @@ impl Format {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Tag {
     format: Format,
     title: Option<String>,
