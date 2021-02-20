@@ -1,4 +1,5 @@
 use gtk::{Builder, Box};
+use gtk::prelude::BuilderExtManual;
 
 use ui::Component;
 

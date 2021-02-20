@@ -2,15 +2,16 @@ mod tageditor;
 mod filelist;
 
 use gtk;
-use gtk::{Builder, Window, WindowExt, Paned, PanedExt, Widget, ScrolledWindow, ContainerExt};
-use gtk::WidgetExt;
+use gtk::{Builder, Window, Paned, PanedExt, Widget, ScrolledWindow, ContainerExt, WidgetExt, GtkWindowExt};
+use gtk::prelude::BuilderExtManual;
+use glib::object::IsA;
 
 pub use ui::tageditor::TagEditor;
 pub use ui::filelist::FileList;
 
 pub trait Component<T>
 where
-    T: gtk::IsA<Widget>,
+    T: IsA<Widget>,
 {
     fn get_root_widget(&mut self) -> &mut T;
 }
@@ -24,8 +25,8 @@ impl MainWindow {
         let window_src = include_str!("main_window.glade");
         let builder = Builder::new_from_string(window_src);
 
-        //scrollcontainer for the filelist
-        let scroll_container: ScrolledWindow = ScrolledWindow::new(None, None);
+        //scroll_container for the filelist
+        let scroll_container: ScrolledWindow = ScrolledWindow::new(gtk::NONE_ADJUSTMENT, gtk::NONE_ADJUSTMENT);
         scroll_container.add(list.get_root_widget());
 
         let root: Window = builder.get_object("main_window").unwrap();

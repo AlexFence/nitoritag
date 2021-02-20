@@ -1,5 +1,6 @@
 extern crate gtk;
 extern crate gdk;
+extern crate glib;
 extern crate id3;
 extern crate metaflac;
 extern crate taglib;
@@ -8,7 +9,6 @@ extern crate url;
 mod ui;
 mod tags;
 
-use gtk::prelude::*;
 
 // TODO add some decent logging
 fn main() {

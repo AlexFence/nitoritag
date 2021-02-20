@@ -1,15 +1,13 @@
 [package]
 name = "nitoritag"
 version = "0.1.0"
-authors = ["Fence <fence@desu-mail.moe>"]
+authors = ["fence <fence@desu-mail.moe>"]
 
 [dependencies]
-gdk = "0.6.0"
-id3 = "0.2"
-metaflac = "0.1.7"
-taglib = "0.2.0"
-url = "1.5.1"
-
-[dependencies.gtk]
-version = "0.2.0"
-features = ["v3_10"]
+gdk = ""
+glib= ""
+id3 = "0.6.2"
+metaflac = "0.2.4"
+taglib = "1.0.0"
+url = "2.2.1"
+gtk = { version="0.8", features=["v3_20"] }

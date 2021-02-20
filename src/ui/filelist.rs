@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use gtk;
 use gdk;
 use gtk::prelude::*;
-use gtk::{TreeView, TreeViewColumn, CellRendererText, ListStoreExt, ListStore};
+use gtk::{TreeView, TreeViewColumn, CellRendererText, ListStore};
 use ui::Component;
 use tags::Tag;
 use tags::TagIndex;
@@ -40,7 +40,7 @@ impl FileList {
 
         // TODO ogg crashes
         // TODO folders crash too
-        root.drag_dest_set(gtk::DEST_DEFAULT_ALL, &[], gdk::ACTION_COPY);
+        root.drag_dest_set(gtk::DestDefaults::all(), &[], gdk::DragAction::COPY);
         root.drag_dest_add_uri_targets();
         root.connect_drag_data_received(move |w, _, _, _, data, _, _| {
             let uris = data.get_uris();
@@ -79,7 +79,7 @@ impl FileList {
                 for iter in iters {
                     // TODO clean up
                     let path_string = model.get_value(&iter, 4).get::<String>().unwrap();
-                    let path = PathBuf::from(path_string);
+                    let path = PathBuf::from(path_string.unwrap());
                     let tag = cloned_tags2.borrow_mut().clone().get(path).unwrap();
                     // send the Tag to the editor
                     println!("{}", tag.title().unwrap());

@@ -131,27 +131,17 @@ impl Tag {
     fn create_from_taglib(p: &PathBuf, format: Format) -> Option<Tag> {
     	let file = taglib::File::new(p.to_str().unwrap());
 
-        fn convert_to_option(s: String) -> Option<String> {
-            if s != "" {
-                return Some(s);
-            }
-
-            None
-        }
-
         if let Ok(file) = file {
             let taglib_tag = file.tag().unwrap();
-            let title = convert_to_option(taglib_tag.title());
-            let album = convert_to_option(taglib_tag.album());
-            let artist = convert_to_option(taglib_tag.artist());
-            // TODO refactor this (mut)
-            let year_temp = taglib_tag.year();
-            let mut year;
+            let title = taglib_tag.title();
+            let album = taglib_tag.album();
+            let artist = taglib_tag.artist();
+            let year_unsigned = taglib_tag.year();
 
-            if year_temp > 0 {
-                year = Some(year_temp as i32);
-            } else {
-                year = None;
+            let mut year: Option<i32> = None;
+
+            if year_unsigned.is_some() {
+                year = Some(year_unsigned.unwrap() as i32);
             }
 
             return Some(Tag{
