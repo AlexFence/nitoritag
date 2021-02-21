@@ -88,9 +88,7 @@ impl FileList {
                 //println!("{}", tag.title().unwrap());
                 selected_tags.push((path, tag));
             }
-            action_bus_clone
-                .borrow_mut()
-                .dispatch(Action::SetTagsToEdit(selected_tags));
+            action_bus_clone.borrow_mut().dispatch(Action::SetTagsToEdit(selected_tags));
         });
 
         FileList {

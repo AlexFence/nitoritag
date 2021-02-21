@@ -121,9 +121,9 @@ impl EditorComponent for TagEditor {
 
     fn get_new_values(&self) -> Tag {
         let title = self.title.get_active_text().unwrap().to_string();
-        let artist = self.title.get_active_text().unwrap().to_string();
-        let album = self.title.get_active_text().unwrap().to_string();
-        let album_artist = self.title.get_active_text().unwrap().to_string();
+        let artist = self.artist.get_active_text().unwrap().to_string();
+        let album = self.album.get_active_text().unwrap().to_string();
+        let album_artist = self.album_artist.get_active_text().unwrap().to_string();
 
         let mut title_opt = None;
         let mut artist_opt = None;

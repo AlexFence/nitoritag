@@ -252,6 +252,7 @@ impl TagIndex {
 }
 
 fn write_id3(new_values: &Tag, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    println!("new values: {:?}", new_values);
     let mut id3_tag = id3::Tag::read_from_path(path)?;
 
     let title_option = new_values.clone().title();

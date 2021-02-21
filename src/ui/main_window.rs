@@ -7,7 +7,6 @@ use gtk::{
     PanedExt, ScrolledWindow, WidgetExt, Window,
 };
 
-use std::borrow::BorrowMut;
 use ui::action_bus::{Action, ActionBus};
 use ui::{Component, FileList, TagEditor};
 
@@ -31,7 +30,6 @@ impl MainWindow {
         scroll_container.add(list.get_root_widget());
 
         let root: Window = builder.get_object("main_window").unwrap();
-        let group = gtk::AccelGroup::new();
         root.set_title("NitoriTag");
 
         let paned: Paned = builder.get_object("paned").unwrap();
@@ -44,16 +42,8 @@ impl MainWindow {
         });
 
         let menu_save: gtk::MenuItem = builder.get_object("menu_save").unwrap();
-        let action_bus_clone = action_bus.clone();
-        menu_save.add_accelerator(
-            "activate",
-            &group,
-            gdk::enums::key::S,
-            gdk::ModifierType::CONTROL_MASK,
-            AccelFlags::MASK,
-        );
-        //menu_save.connect_activate(move |_| action_bus_clone.into_inner().dispatch(Action::Save));
-        menu_save.connect_activate(move |_| println!("nya"));
+        let mut action_bus_clone = action_bus.clone();
+        menu_save.connect_activate(move |_| action_bus_clone.borrow_mut().dispatch(Action::Save));
 
         MainWindow { root, action_bus }
     }
