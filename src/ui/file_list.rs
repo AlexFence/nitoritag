@@ -1,30 +1,29 @@
+use std::cell::RefCell;
 use std::path::PathBuf;
 use std::rc::Rc;
-use std::cell::RefCell;
 use std::str::FromStr;
 
-use gtk;
 use gdk;
+use gtk;
 use gtk::prelude::*;
-use gtk::{TreeView, TreeViewColumn, CellRendererText, ListStore, SelectionMode};
 use gtk::TreeIter;
+use gtk::{CellRendererText, ListStore, SelectionMode, TreeView, TreeViewColumn};
 use url::Url;
 
 use tags::Tag;
 use tags::TagIndex;
-use ui::{Component};
-use ui::action_bus::{ActionBus, Action};
+use ui::action_bus::{Action, ActionBus};
+use ui::Component;
 
 struct FileListRow {
     pub tag: Tag,
     pub path: PathBuf,
 }
 
-
 pub struct FileList {
     root: TreeView,
     tags: Rc<RefCell<TagIndex>>,
-    action_bus: Rc<RefCell<ActionBus>>
+    action_bus: Rc<RefCell<ActionBus>>,
 }
 
 impl FileList {
@@ -38,7 +37,6 @@ impl FileList {
         Self::append_text_column(&root, "Path", 4);
         root.set_headers_visible(true);
         root.set_model(Some(&Self::get_model()));
-
 
         let cloned_tags = tags.clone();
 
@@ -72,28 +70,34 @@ impl FileList {
         let selection = root.get_selection();
         selection.set_mode(SelectionMode::Multiple);
         selection.connect_changed(move |tree_selection| {
-                // get tree paths and model and shit to tired
-                let (paths, model) = tree_selection.get_selected_rows();
-                // convert the paths to iters
-                let mut iters: Vec<TreeIter> = Vec::new();
-                for path in paths {
-                    iters.push(model.get_iter(&path).unwrap());
-                }
+            // get tree paths and model and shit to tired
+            let (paths, model) = tree_selection.get_selected_rows();
+            // convert the paths to iters
+            let mut iters: Vec<TreeIter> = Vec::new();
+            for path in paths {
+                iters.push(model.get_iter(&path).unwrap());
+            }
 
-                let mut selected_tags: Vec<Tag> = Vec::new();
+            let mut selected_tags: Vec<(PathBuf, Tag)> = Vec::new();
 
-                for iter in iters {
-                    // TODO clean up
-                    let path_string = model.get_value(&iter, 4).get::<String>().unwrap();
-                    let path = PathBuf::from(path_string.unwrap());
-                    let tag = cloned_tags2.borrow_mut().clone().get(path).unwrap();
-                    //println!("{}", tag.title().unwrap());
-                    selected_tags.push(tag);
-                }
-                action_bus_clone.borrow_mut().dispatch(Action::SetTagsToEdit(selected_tags));
+            for iter in iters {
+                // TODO clean up
+                let path_string = model.get_value(&iter, 4).get::<String>().unwrap();
+                let path = PathBuf::from(path_string.unwrap());
+                let tag = cloned_tags2.borrow_mut().clone().get(&path).unwrap();
+                //println!("{}", tag.title().unwrap());
+                selected_tags.push((path, tag));
+            }
+            action_bus_clone
+                .borrow_mut()
+                .dispatch(Action::SetTagsToEdit(selected_tags));
         });
 
-        FileList { root, tags, action_bus }
+        FileList {
+            root,
+            tags,
+            action_bus,
+        }
     }
 
     fn append_text_column(tree: &TreeView, title: &str, position: i32) {
@@ -111,15 +115,13 @@ impl FileList {
 
     //TODO get rid of this
     fn get_model() -> ListStore {
-        ListStore::new(
-            &[
-                String::static_type(),
-                String::static_type(),
-                String::static_type(),
-                String::static_type(),
-                String::static_type(),
-            ],
-        )
+        ListStore::new(&[
+            String::static_type(),
+            String::static_type(),
+            String::static_type(),
+            String::static_type(),
+            String::static_type(),
+        ])
     }
 
     //TODO Try to improve this mess ;w;
@@ -133,11 +135,13 @@ impl FileList {
         let paths = cloned_and_borrowed_tags1.get_index();
         for path in paths {
             // TODO match this
-            let tag = borrowed_tags.clone().get(path.to_path_buf()).unwrap();
-            let row  = FileListRow {tag, path: path.clone()};
+            let tag = borrowed_tags.clone().get(&path.to_path_buf()).unwrap();
+            let row = FileListRow {
+                tag,
+                path: path.clone(),
+            };
             Self::display_row(&model, row)
         }
-
 
         table.set_model(Some(&model));
     }
@@ -146,8 +150,18 @@ impl FileList {
         // tag needs to be cloned because it isn't a reference
         // is there a better way for doing this?
         let title = row.tag.clone().title().unwrap_or(String::new()).to_string();
-        let artist = row.tag.clone().artist().unwrap_or(String::new()).to_string();
-        let album_artist = row.tag.clone().album_artist().unwrap_or(String::new()).to_string();
+        let artist = row
+            .tag
+            .clone()
+            .artist()
+            .unwrap_or(String::new())
+            .to_string();
+        let album_artist = row
+            .tag
+            .clone()
+            .album_artist()
+            .unwrap_or(String::new())
+            .to_string();
         let album = row.tag.clone().album().unwrap_or(String::new()).to_string();
         let path = match row.path.clone().into_os_string().into_string() {
             Ok(v) => v,

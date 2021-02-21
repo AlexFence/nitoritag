@@ -1,13 +1,13 @@
-use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
+use std::rc::Rc;
 
-use gtk::{Builder, EntryExt, ComboBoxTextExt, CellLayoutExt};
 use gtk::prelude::{BuilderExtManual, ComboBoxExtManual};
+use gtk::{Builder, CellLayoutExt, ComboBoxTextExt, EntryExt};
 
 use tags::Tag;
-use ui::{Component, EditorComponent};
 use ui::action_bus::ActionBus;
+use ui::{Component, EditorComponent};
 
 pub struct TagEditor {
     root: gtk::Box,
@@ -16,7 +16,7 @@ pub struct TagEditor {
     album_artist: gtk::ComboBoxText,
     album: gtk::ComboBoxText,
     tags: Vec<Tag>,
-    action_bus: Rc<RefCell<ActionBus>>
+    action_bus: Rc<RefCell<ActionBus>>,
 }
 
 impl TagEditor {
@@ -31,7 +31,15 @@ impl TagEditor {
         let album: gtk::ComboBoxText = builder.get_object("album_entry").unwrap();
 
         let tags: Vec<Tag> = Vec::new();
-        Self { root, title, artist, album_artist, album, tags, action_bus}
+        Self {
+            root,
+            title,
+            artist,
+            album_artist,
+            album,
+            tags,
+            action_bus,
+        }
     }
 
     fn clear_fields(&mut self) {
@@ -42,7 +50,7 @@ impl TagEditor {
     }
 
     fn populate_entry(entry: &gtk::ComboBoxText, values: &HashSet<String>) {
-        values.iter().for_each(|x|  entry.append_text(x.as_str()));
+        values.iter().for_each(|x| entry.append_text(x.as_str()));
 
         if values.len() > 1 {
             entry.prepend_text("<keep>");
@@ -60,7 +68,7 @@ impl TagEditor {
         let mut unique_albums: HashSet<String> = HashSet::new();
 
         for tag in self.tags.clone() {
-            let title_option= tag.clone().title();
+            let title_option = tag.clone().title();
             let artist_option = tag.clone().artist();
             let album_option = tag.clone().album();
             let album_artist_option = tag.clone().album_artist();
@@ -69,24 +77,23 @@ impl TagEditor {
             // no value is also a value for the combo boxes
             match title_option {
                 Some(title) => unique_titles.insert(title),
-                None => unique_titles.insert(String::new())
+                None => unique_titles.insert(String::new()),
             };
 
             match artist_option {
                 Some(artists) => unique_artists.insert(artists),
-                None => unique_artists.insert(String::new())
+                None => unique_artists.insert(String::new()),
             };
 
             match album_option {
                 Some(album) => unique_albums.insert(album),
-                None => unique_albums.insert(String::new())
+                None => unique_albums.insert(String::new()),
             };
 
             match album_artist_option {
                 Some(album_artist) => unique_album_artists.insert(album_artist),
-                None => unique_album_artists.insert(String::new())
+                None => unique_album_artists.insert(String::new()),
             };
-
         }
 
         Self::populate_entry(&self.title, &unique_titles);
@@ -110,5 +117,35 @@ impl EditorComponent for TagEditor {
         }
         self.tags = tags;
         self.update_fields();
+    }
+
+    fn get_new_values(&self) -> Tag {
+        let title = self.title.get_active_text().unwrap().to_string();
+        let artist = self.title.get_active_text().unwrap().to_string();
+        let album = self.title.get_active_text().unwrap().to_string();
+        let album_artist = self.title.get_active_text().unwrap().to_string();
+
+        let mut title_opt = None;
+        let mut artist_opt = None;
+        let mut album_opt = None;
+        let mut album_artist_opt = None;
+
+        if !title.eq("<keep>") {
+            title_opt = Some(title);
+        }
+
+        if !album.eq("<keep>") {
+            album_opt = Some(album);
+        }
+
+        if !artist.eq("<keep>") {
+            artist_opt = Some(artist);
+        }
+
+        if !album_artist.eq("<keep>") {
+            album_artist_opt = Some(album_artist);
+        }
+
+        Tag::new(title_opt, album_opt, artist_opt, album_artist_opt)
     }
 }
