@@ -31,9 +31,11 @@ impl MainWindow {
 
         let root: Window = builder.get_object("main_window").unwrap();
         root.set_title("NitoriTag");
+        root.set_default_size(800, 400);
+
 
         let paned: Paned = builder.get_object("paned").unwrap();
-        paned.add1(editor.get_root_widget());
+        paned.pack1(editor.get_root_widget(), false, false);
         paned.add2(&scroll_container);
 
         root.connect_delete_event(|_, _| {
