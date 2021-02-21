@@ -6,7 +6,7 @@ use std::str::FromStr;
 use gdk;
 use gtk;
 use gtk::prelude::*;
-use gtk::TreeIter;
+use gtk::{TreeIter, TreeModel};
 use gtk::{CellRendererText, ListStore, SelectionMode, TreeView, TreeViewColumn};
 use url::Url;
 
@@ -14,6 +14,7 @@ use tags::Tag;
 use tags::TagIndex;
 use ui::action_bus::{Action, ActionBus};
 use ui::Component;
+use gdk::WindowExt;
 
 struct FileListRow {
     pub tag: Tag,
@@ -36,14 +37,21 @@ impl FileList {
         Self::append_text_column(&root, "Album", 3);
         Self::append_text_column(&root, "Path", 4);
         root.set_headers_visible(true);
-        root.set_model(Some(&Self::get_model()));
+        root.set_model(Some(&Self::get_empty_model()));
 
         let cloned_tags = tags.clone();
 
         // TODO ogg crashes
-        root.drag_dest_set(gtk::DestDefaults::all(), &[], gdk::DragAction::COPY);
+        root.drag_dest_set(gtk::DestDefaults::ALL, &[], gdk::DragAction::MOVE | gdk::DragAction::COPY);
         root.drag_dest_add_uri_targets();
-        root.connect_drag_data_received(move |w, _, _, _, data, _, _| {
+        // TODO ensure that MOVE is the default action
+        // I feel like this isn't possible with the bindings yet, as no callback params are mutable
+        // https://valadoc.org/gtk+-3.0/Gtk.drag_dest_set.html
+        root.connect_drag_data_received(move |w, ctx, _, _, data, _, _| {
+            let action = ctx.get_selected_action();
+
+            println!("{:?}", action);
+
             let uris = data.get_uris();
             for uri in uris {
                 let url = Url::parse(&uri);
@@ -51,14 +59,25 @@ impl FileList {
                     Ok(v) => {
                         match v.to_file_path() {
                             Ok(path) => {
-                                // TODO check if it is a folder here
-                                cloned_tags.borrow_mut().add_from_path(path);
-                                Self::update_table(w, cloned_tags.clone());
+                                match action {
+                                    gdk::DragAction::MOVE  => {
+                                        let result = cloned_tags.borrow_mut().add_from_path(&path);
+                                        if result.is_ok() {
+                                            Self::update_table(w, cloned_tags.clone());
+                                        }
+                                    },
+                                    gdk::DragAction::COPY => {
+                                        cloned_tags.borrow_mut().clear();
+                                        cloned_tags.borrow_mut().add_from_path(&path);
+                                        Self::update_table(w, cloned_tags.clone());
+                                    },
+                                    _ => eprintln!("unsupported DragActon")
+                                };
                             }
-                            Err(e) => println!("this is not a local file desu {:?}", e),
+                            Err(e) => eprintln!("this is not a local file desu {:?}", e),
                         }
                     }
-                    Err(e) => println!("parse error: {:?}", e),
+                    Err(e) => eprintln!("parse error: {:?}", e),
                 }
             }
         });
@@ -111,8 +130,7 @@ impl FileList {
         tree.append_column(&column);
     }
 
-    //TODO get rid of this
-    fn get_model() -> ListStore {
+    fn get_empty_model() -> ListStore {
         ListStore::new(&[
             String::static_type(),
             String::static_type(),
@@ -124,7 +142,7 @@ impl FileList {
 
     //TODO Try to improve this mess ;w;
     fn update_table(table: &TreeView, tags: Rc<RefCell<TagIndex>>) {
-        let model: ListStore = Self::get_model();
+        let model: ListStore = Self::get_empty_model();
         //what even is this?
         let cloned_tags1 = tags.clone();
         let cloned_and_borrowed_tags1 = cloned_tags1.borrow();
@@ -132,7 +150,6 @@ impl FileList {
 
         let paths = cloned_and_borrowed_tags1.get_index();
         for path in paths {
-            // TODO match this
             let tag = borrowed_tags.clone().get(&path.to_path_buf()).unwrap();
             let row = FileListRow {
                 tag,

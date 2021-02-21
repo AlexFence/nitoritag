@@ -5,6 +5,7 @@ extern crate id3;
 extern crate metaflac;
 extern crate taglib;
 extern crate url;
+extern crate core;
 
 mod tags;
 mod ui;

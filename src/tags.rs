@@ -5,6 +5,7 @@ use std::fs;
 use std::io;
 use std::path::PathBuf;
 use taglib;
+use std::collections::hash_map::Iter;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Format {
@@ -208,6 +209,19 @@ impl TagIndex {
         }
     }
 
+    pub fn clear(&mut self) {
+        self.tags = HashMap::new();
+        self.index = Vec::new();
+    }
+
+    pub fn add_file(&mut self, path: &PathBuf) {
+        self.add_file_path(path);
+    }
+
+    pub fn iter(&self) -> Iter<PathBuf, Tag> {
+        self.tags.iter()
+    }
+
     pub fn insert(mut self, p: PathBuf, t: Tag) {
         self.tags.insert(p, t);
     }
@@ -219,12 +233,12 @@ impl TagIndex {
         }
     }
 
-    pub fn add_from_path(&mut self, path: PathBuf) -> io::Result<()> {
+    pub fn add_from_path(&mut self, path: &PathBuf) -> io::Result<()> {
         if path.is_dir() {
             for entry in fs::read_dir(&path)? {
                 let entry = entry?;
                 let path = entry.path();
-                self.add_from_path(path)?;
+                self.add_from_path(&path)?;
             }
         } else {
             self.add_file_path(path)
@@ -236,16 +250,16 @@ impl TagIndex {
         &self.index
     }
 
-    fn add_file_path(&mut self, path: PathBuf) {
-        if Format::file_is_supported(&path) {
-            let tag = Tag::from_path(&path).unwrap();
+    fn add_file_path(&mut self, path: &PathBuf) {
+        if Format::file_is_supported(path) {
+            let tag = Tag::from_path(path).unwrap();
             let e = path.clone();
             &self.index.push(e);
-            &self.tags.insert(path, tag);
+            &self.tags.insert(path.clone(), tag);
         } else {
             eprintln!(
                 "{} is not a supported audio file!",
-                path.into_os_string().into_string().unwrap()
+                path.clone().into_os_string().into_string().unwrap()
             );
         }
     }
